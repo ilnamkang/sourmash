@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-import sourmash_lib
+import sourmash
 from .signature import SourmashSignature
 from .sbtmh import (search_minhashes,
                                 search_minhashes_containment)
@@ -59,7 +59,7 @@ def search_databases(query, databases, threshold, do_containment, best_only):
 
 
 def gather_databases(query, databases, threshold_bp):
-    from sourmash_lib.sbtmh import SearchMinHashesFindBestIgnoreMaxHash
+    from sourmash.sbtmh import SearchMinHashesFindBestIgnoreMaxHash
 
     orig_query = query
     orig_mins = orig_query.minhash.get_hashes()
@@ -132,7 +132,7 @@ def gather_databases(query, databases, threshold_bp):
         R_comparison = max(R_metagenome, R_genome)
 
         # CTB: these could probably be replaced by minhash.downsample_scaled.
-        new_max_hash = sourmash_lib.MAX_HASH / float(R_comparison)
+        new_max_hash = sourmash.MAX_HASH / float(R_comparison)
         query_mins = set([ i for i in query_mins if i < new_max_hash ])
         found_mins = set([ i for i in found_mins if i < new_max_hash ])
         orig_mins = set([ i for i in orig_mins if i < new_max_hash ])
