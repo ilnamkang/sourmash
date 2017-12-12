@@ -1,16 +1,25 @@
 from __future__ import print_function
 import sys
 from setuptools import setup
-from setuptools import Extension
 import os
+
+
+def build_native(spec):
+    build = spec.add_external_build(
+        cmd=['cargo', 'build', '--release'],
+        path='./rust'
+    )
+
+    spec.add_cffi_module(
+        module_path='sourmash_lib._lowlevel',
+        dylib=lambda: build.find_dylib('sourmash_lib', in_path='target/release'),
+        header_filename=lambda: build.find_header('sourmash.h', in_path='target')
+    )
 
 # retrieve VERSION from sourmash_lib/VERSION.
 thisdir = os.path.dirname(__file__)
 version_file = open(os.path.join(thisdir, 'sourmash_lib', 'VERSION'))
 VERSION = version_file.read().strip()
-
-EXTRA_COMPILE_ARGS = ['-std=c++11', '-pedantic']
-EXTRA_LINK_ARGS=[]
 
 CLASSIFIERS = [
     "Environment :: Console",
@@ -29,19 +38,6 @@ CLASSIFIERS = [
 
 CLASSIFIERS.append("Development Status :: 5 - Production/Stable")
 
-if sys.platform == 'darwin':              # Mac OS X?
-    # force 64bit only builds
-    EXTRA_COMPILE_ARGS.extend(['-arch', 'x86_64', '-mmacosx-version-min=10.7',
-                               '-stdlib=libc++'])
-
-else:                                     # ...likely Linux
-   if os.environ.get('SOURMASH_COVERAGE'):
-      print('Turning on coverage analysis.')
-      EXTRA_COMPILE_ARGS.extend(['-g', '--coverage', '-lgcov'])
-      EXTRA_LINK_ARGS.extend(['--coverage', '-lgcov'])
-   else:
-      EXTRA_COMPILE_ARGS.append('-O3')
-
 SETUP_METADATA = \
                {
     "name": "sourmash",
@@ -52,30 +48,21 @@ SETUP_METADATA = \
     "author_email": "titus@idyll.org",
     "license": "BSD 3-clause",
     "packages": ["sourmash_lib"],
+    "zip_safe": False,
+    "platforms": 'any',
     "entry_points": {'console_scripts': [
         'sourmash = sourmash_lib.__main__:main'
         ]
     },
-    "ext_modules": [Extension("sourmash_lib._minhash",
-                               sources=["sourmash_lib/_minhash.pyx",
-                                        "third-party/smhasher/MurmurHash3.cc"],
-                               depends=["sourmash_lib/kmer_min_hash.hh"],
-                               include_dirs=["./sourmash_lib",
-                                             "./third-party/smhasher/"],
-                               language="c++",
-                               extra_compile_args=EXTRA_COMPILE_ARGS,
-                               extra_link_args=EXTRA_LINK_ARGS)],
     "install_requires": ["screed>=0.9", "ijson", "khmer>2.0<3.0"],
-    "setup_requires": ['Cython>=0.25.2', "setuptools>=18.0"],
+    "setup_requires": ["setuptools>=18.0", 'milksnake'],
     "extras_require": {
         'test' : ['pytest', 'pytest-cov', 'numpy', 'matplotlib', 'scipy'],
         'demo' : ['jupyter', 'jupyter_client', 'ipython'],
         'doc' : ['sphinx'],
         },
     "include_package_data": True,
-    "package_data": {
-        "sourmash_lib": ['*.pxd']
-    },
+    'milksnake_tasks': [build_native],
     "classifiers": CLASSIFIERS
     }
 

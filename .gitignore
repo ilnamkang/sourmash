@@ -17,4 +17,6 @@ _minhash.so
 .cache
 *.so
 .coverage
-sourmash_lib/_minhash.cpp
+.tox
+.eggs
+rust/target
