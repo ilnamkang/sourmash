@@ -270,37 +270,28 @@ class MinHash(RustObject):
 
         return a
 
-#    def intersection(self, MinHash other):
-#        if self.num != other.num:
-#            err = 'must have same num: {} != {}'.format(self.num,
-#                                                            other.num)
-#            raise TypeError(err)
-#        else:
-#            num = self.num
-#
-#        if self.track_abundance and other.track_abundance:
-#            combined_mh = new KmerMinAbundance(num,
-#                                          deref(self._this).ksize,
-#                                          deref(self._this).is_protein,
-#                                          deref(self._this).seed,
-#                                          deref(self._this).max_hash)
-#
-#        else:
-#            combined_mh = new KmerMinHash(num,
-#                                          deref(self._this).ksize,
-#                                          deref(self._this).is_protein,
-#                                          deref(self._this).seed,
-#                                          deref(self._this).max_hash)
-#
-#        combined_mh.merge(deref(self._this))
-#        combined_mh.merge(deref(other._this))
-#
-#        common = set(self.get_mins())
-#        common.intersection_update(other.get_mins())
-#        common.intersection_update(combined_mh.mins)
-#
-#        return common, max(combined_mh.size(), 1)
-#
+    def intersection(self, other):
+        if self.num != other.num:
+            err = 'must have same num: {} != {}'.format(self.num, other.num)
+            raise TypeError(err)
+        else:
+            num = self.num
+
+        combined_mh = MinHash(self.num, self.ksize,
+                              is_protein=self.is_protein,
+                              seed=self.seed,
+                              max_hash=self.max_hash,
+                              track_abundance=self.track_abundance)
+
+        combined_mh.merge(self)
+        combined_mh.merge(other)
+
+        common = set(self.get_mins())
+        common.intersection_update(other.get_mins())
+        common.intersection_update(combined_mh.get_mins())
+
+        return common, max(len(combined_mh), 1)
+
     def compare(self, other):
         common, size = self.intersection(other)
         n = len(common)
@@ -357,6 +348,8 @@ class MinHash(RustObject):
         return float(len(overlap)) / float(len(a))
 
     def __iadd__(self, other):
+        if not isinstance(other, MinHash):
+            raise TypeError("Must be a MinHash!")
         self._methodcall(lib.kmerminhash_merge, other._get_objptr())
         return self
     merge = __iadd__

@@ -132,3 +132,18 @@ pub extern "C" fn kmerminhash_max_hash(ptr: *mut KmerMinHash) -> u64 {
     };
     mh.max_hash
 }
+
+#[no_mangle]
+pub extern "C" fn kmerminhash_merge(ptr: *mut KmerMinHash, other: *const KmerMinHash) {
+    let mh = unsafe {
+        assert!(!ptr.is_null());
+        &mut *ptr
+    };
+    let other_mh = unsafe {
+       assert!(!other.is_null());
+       &*other
+    };
+
+    let merged = mh.merge(other_mh);
+    mh.mins = merged
+}
