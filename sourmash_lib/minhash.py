@@ -104,56 +104,52 @@ class MinHash(RustObject):
             else:
                 self.add_many(mins)
 
-#    def __copy__(self):
-#        a = MinHash(deref(self._this).num, deref(self._this).ksize,
-#                    deref(self._this).is_protein, self.track_abundance,
-#                    deref(self._this).seed, deref(self._this).max_hash)
-#        a.merge(self)
-#        return a
-#
-#    def __getstate__(self):             # enable pickling
-#        with_abundance = False
-#        if self.track_abundance:
-#            with_abundance = True
-#
-#        return (deref(self._this).num,
-#                deref(self._this).ksize,
-#                deref(self._this).is_protein,
-#                self.get_mins(with_abundance=with_abundance),
-#                None, self.track_abundance, deref(self._this).max_hash,
-#                deref(self._this).seed)
-#
-#    def __setstate__(self, tup):
-#        (n, ksize, is_protein, mins, _, track_abundance, max_hash, seed) =\
-#          tup
-#
-#        self.track_abundance = track_abundance
-#
-#        cdef KmerMinHash *mh = NULL
-#        if track_abundance:
-#            mh = new KmerMinAbundance(n, ksize, is_protein, seed, max_hash)
-#            self._this.reset(mh)
-#            self.set_abundances(mins)
-#        else:
-#            mh = new KmerMinHash(n, ksize, is_protein, seed, max_hash)
-#            self._this.reset(mh)
-#            self.add_many(mins)
-#
-#    def __reduce__(self):
-#        return (MinHash,
-#               (deref(self._this).num,
-#                deref(self._this).ksize,
-#                deref(self._this).is_protein,
-#                self.track_abundance,
-#                deref(self._this).seed,
-#                deref(self._this).max_hash,
-#                self.get_mins(with_abundance=self.track_abundance),
-#                0))
-#
-#    def __richcmp__(self, other, op):
-#        if op == 2:
-#            return self.__getstate__() == other.__getstate__()
-#        raise Exception("undefined comparison")
+    def __copy__(self):
+        a = MinHash(self.num, self.ksize,
+                    is_protein=self.is_protein, track_abundance=self.track_abundance,
+                    seed=self.seed, max_hash=self.max_hash)
+        a.merge(self)
+        return a
+
+    def __getstate__(self):             # enable pickling
+        with_abundance = False
+        if self.track_abundance:
+            with_abundance = True
+
+        return (self.num,
+                self.ksize,
+                self.is_protein,
+                self.get_mins(with_abundance=with_abundance),
+                None, self.track_abundance, self.max_hash,
+                self.seed)
+
+    def __setstate__(self, tup):
+        (n, ksize, is_protein, mins, _, track_abundance, max_hash, seed) =\
+          tup
+
+        self.__del__()
+        self._objptr = lib.kmerminhash_new(n, ksize, is_protein,
+                                           seed, max_hash, track_abundance)
+        if track_abundance:
+            self.set_abundances(mins)
+        else:
+            self.add_many(mins)
+
+    def __reduce__(self):
+        return (MinHash,
+               (self.num,
+                self.ksize,
+                self.is_protein,
+                self.track_abundance,
+                self.seed,
+                self.max_hash,
+                self.get_mins(with_abundance=self.track_abundance),
+                0))
+
+    def __richcmp__(self, other, op):
+        if op == 2:
+            return self.__getstate__() == other.__getstate__()
+        raise Exception("undefined comparison")
 
     def copy_and_clear(self):
         a = MinHash(self.num, self.ksize,
@@ -225,9 +221,11 @@ class MinHash(RustObject):
     def add_hash(self, h):
         self._methodcall(lib.kmerminhash_add_hash, h)
 
-#    def count_common(self, MinHash other):
-#        return deref(self._this).count_common(deref(other._this))
-#
+    def count_common(self, other):
+        if not isinstance(other, MinHash):
+            raise TypeError("Must be a MinHash!")
+        return self._methodcall(lib.kmerminhash_count_common, other._get_objptr())
+
     def downsample_n(self, new_num):
         if self.num and self.num < new_num:
             raise ValueError('new sample n is higher than current sample n')
@@ -335,7 +333,7 @@ class MinHash(RustObject):
 
     def contained_by(self, other):
         """Calculate how much of self is contained by other."""
-        return self.count_common(other) / len(self.get_mins())
+        return self.count_common(other) / len(self)
 
     def similarity_ignore_maxhash(self, other):
         a = set(self.get_mins())

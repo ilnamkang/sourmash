@@ -1,9 +1,8 @@
-extern crate libc;
 extern crate sourmash;
 
-use libc::c_char;
 use std::ffi::CStr;
 use std::mem;
+use std::os::raw::c_char;
 use sourmash::{_hash_murmur, KmerMinHash};
 
 #[no_mangle]
@@ -146,4 +145,18 @@ pub extern "C" fn kmerminhash_merge(ptr: *mut KmerMinHash, other: *const KmerMin
 
     let merged = mh.merge(other_mh);
     mh.mins = merged
+}
+
+#[no_mangle]
+pub extern "C" fn kmerminhash_count_common(ptr: *mut KmerMinHash, other: *const KmerMinHash) -> u64 {
+    let mh = unsafe {
+        assert!(!ptr.is_null());
+        &mut *ptr
+    };
+    let other_mh = unsafe {
+       assert!(!other.is_null());
+       &*other
+    };
+
+    mh.count_common(other_mh)
 }

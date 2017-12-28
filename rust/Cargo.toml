@@ -9,8 +9,7 @@ name = "sourmash_lib"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-cbindgen = "0.3.2"
+cbindgen = "0.3.3"
 
 [dependencies]
-libc = "0.2.34"
 sourmash = { git = "https://github.com/luizirber/sourmash-rust.git" }
