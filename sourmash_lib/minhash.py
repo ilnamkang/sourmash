@@ -84,6 +84,7 @@ class MinHash(RustObject):
 
     def __init__(self, n, ksize, is_protein=False, track_abundance=False,
                  seed=MINHASH_DEFAULT_SEED, max_hash=0, mins=None, scaled=0):
+        ffi.init_once(lib.sourmash_init, 'init')
         self.track_abundance = track_abundance
 
         if max_hash and scaled:

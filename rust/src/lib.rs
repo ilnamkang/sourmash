@@ -1,9 +1,12 @@
+extern crate backtrace;
 extern crate sourmash;
 
 use std::ffi::CStr;
 use std::mem;
 use std::os::raw::c_char;
 use sourmash::{_hash_murmur, KmerMinHash};
+
+pub mod utils;
 
 #[no_mangle]
 pub extern "C" fn hash_murmur(kmer: *const c_char, seed: u64) -> u64 {

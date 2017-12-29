@@ -12,4 +12,5 @@ crate-type = ["cdylib"]
 cbindgen = "0.3.3"
 
 [dependencies]
+backtrace = "0.3.4"
 sourmash = { git = "https://github.com/luizirber/sourmash-rust.git" }
