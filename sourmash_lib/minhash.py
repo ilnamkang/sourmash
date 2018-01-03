@@ -18,7 +18,8 @@ def get_minhash_default_seed():
 
 
 # we use the 64-bit hash space of MurmurHash only
-MINHASH_MAX_HASH = 2**64 - 1
+# this is 2 ** 64 - 1 in hexadecimal
+MINHASH_MAX_HASH = 0xffffffffffffffff
 
 
 def get_minhash_max_hash():

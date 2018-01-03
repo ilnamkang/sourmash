@@ -11,7 +11,7 @@ def build_native(spec):
 
     spec.add_cffi_module(
         module_path='sourmash_lib._lowlevel',
-        dylib=lambda: build.find_dylib('sourmash_lib', in_path='target/release'),
+        dylib=lambda: build.find_dylib('sourmash', in_path='target/release'),
         header_filename=lambda: build.find_header('sourmash.h', in_path='target')
     )
 
