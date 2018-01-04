@@ -180,8 +180,9 @@ class MinHash(RustObject):
 
     def get_mins(self, with_abundance=False):
         if with_abundance and self.track_abundance:
-            #return dict(zip(mh.mins, mh.abunds))
-            pass
+            return {self._methodcall(lib.kmerminhash_get_min_idx, idx):
+                    self._methodcall(lib.kmerminhash_get_abund_idx, idx)
+                    for idx in range_type(len(self))}
         else:
             return [self._methodcall(lib.kmerminhash_get_min_idx, idx)
                     for idx in range_type(len(self))]
@@ -354,21 +355,21 @@ class MinHash(RustObject):
         return self
     merge = __iadd__
 
-#    cpdef set_abundances(self, dict values):
-#        if self.track_abundance:
-#            added = 0
-#
-#            for k, v in sorted(values.items()):
-#                if not self.max_hash or k <= self.max_hash:
-#                    deref(self._this).mins.push_back(k)
-#                    (<KmerMinAbundance*>address(deref(self._this))).abunds.push_back(v)
-#                    added += 1
-#                    if self.num > 0 and added >= self.num:
-#                        break
-#        else:
-#            raise RuntimeError("Use track_abundance=True when constructing "
-#                               "the MinHash to use set_abundances.")
-#
+    def set_abundances(self, values):
+        if self.track_abundance:
+            added = 0
+
+            for k, v in sorted(values.items()):
+                if not self.max_hash or k <= self.max_hash:
+                    self._methodcall(lib.kmerminhash_mins_push, k)
+                    self._methodcall(lib.kmerminhash_abunds_push, v)
+                    added += 1
+                    if self.num > 0 and added >= self.num:
+                        break
+        else:
+            raise RuntimeError("Use track_abundance=True when constructing "
+                               "the MinHash to use set_abundances.")
+
     def add_protein(self, sequence):
         ksize = self.ksize // 3
         if len(sequence) < ksize:
