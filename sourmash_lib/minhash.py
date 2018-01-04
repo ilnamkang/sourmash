@@ -97,7 +97,8 @@ class MinHash(RustObject):
             raise ValueError('cannot set both n and max_hash')
 
         self._objptr = lib.kmerminhash_new(n, ksize, is_protein,
-                                           seed, max_hash, track_abundance)
+                                           seed, int(max_hash),
+                                           track_abundance)
         self.__dealloc_func__ = lib.kmerminhash_free
 
         if mins:
