@@ -114,14 +114,10 @@ class MinHash(RustObject):
         return a
 
     def __getstate__(self):             # enable pickling
-        with_abundance = False
-        if self.track_abundance:
-            with_abundance = True
-
         return (self.num,
                 self.ksize,
                 self.is_protein,
-                self.get_mins(with_abundance=with_abundance),
+                self.get_mins(with_abundance=self.track_abundance),
                 None, self.track_abundance, self.max_hash,
                 self.seed)
 
@@ -148,10 +144,8 @@ class MinHash(RustObject):
                 self.get_mins(with_abundance=self.track_abundance),
                 0))
 
-    def __richcmp__(self, other, op):
-        if op == 2:
-            return self.__getstate__() == other.__getstate__()
-        raise Exception("undefined comparison")
+    def __eq__(self, other):
+        return self.__getstate__() == other.__getstate__()
 
     def copy_and_clear(self):
         a = MinHash(self.num, self.ksize,
@@ -278,7 +272,7 @@ class MinHash(RustObject):
         else:
             num = self.num
 
-        combined_mh = MinHash(self.num, self.ksize,
+        combined_mh = MinHash(num, self.ksize,
                               is_protein=self.is_protein,
                               seed=self.seed,
                               max_hash=self.max_hash,
