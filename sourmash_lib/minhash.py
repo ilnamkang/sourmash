@@ -289,9 +289,10 @@ class MinHash(RustObject):
         return common, max(len(combined_mh), 1)
 
     def compare(self, other):
-        common, size = self.intersection(other)
-        n = len(common)
-        return n / size
+        if self.num != other.num:
+            err = 'must have same num: {} != {}'.format(self.num, other.num)
+            raise TypeError(err)
+        return self._methodcall(lib.kmerminhash_compare, other._get_objptr())
 
     def jaccard(self, other):
         return self.compare(other)

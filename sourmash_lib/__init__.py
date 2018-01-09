@@ -7,6 +7,9 @@ import re
 import math
 import os
 
+from sourmash_lib._lowlevel import ffi, lib
+ffi.init_once(lib.sourmash_init, 'init')
+
 from .minhash import (MinHash, get_minhash_default_seed, get_minhash_max_hash)
 from .signature import (load_signatures, load_one_signature, SourmashSignature,
                         save_signatures)

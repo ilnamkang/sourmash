@@ -64,7 +64,6 @@ def encode_str(s):
 
 def rustcall(func, *args):
     """Calls rust method and does some error handling."""
-    ffi.init_once(lib.sourmash_init, 'init')
     lib.sourmash_err_clear()
     rv = func(*args)
     err = lib.sourmash_err_get_last_code()
